@@ -41,7 +41,7 @@ app.get('/requests/:id', (req, res) => {
   const request = requests.find((item) => item.id === id);
 
   if (!request) {
-    return res.json({ error: 'Request not found' });
+    return res.status(404).json({ error: 'Request not found' });
   }
 
   res.json(request);
