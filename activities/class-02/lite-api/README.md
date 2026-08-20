@@ -48,18 +48,18 @@ El servidor queda escuchando en el puerto **3000**. Para detenerlo, presiona `Ct
 
 ## Endpoints disponibles
 
-| Método | Ruta             | Para qué sirve                                |
-| ------ | ---------------- | --------------------------------------------- |
-| GET    | `/getRequests`   | Devuelve la lista completa de solicitudes.    |
-| GET    | `/requests/:id`  | Devuelve una solicitud por su identificador.  |
-| POST   | `/requests`      | Crea una nueva solicitud.                     |
+| Método | Ruta           | Para qué sirve                                |
+| ------ | -------------- | --------------------------------------------- |
+| GET    | `/requests`    | Devuelve la lista completa de solicitudes.    |
+| GET    | `/requests/:id`| Devuelve una solicitud por su identificador (o `404` si no existe). |
+| POST   | `/requests`    | Crea una nueva solicitud (`201` si se creó, `400` si falta el `title`). |
 
 ### Ejemplos con `curl`
 
 Listar todas las solicitudes:
 
 ```bash
-curl -i http://localhost:3000/getRequests
+curl -i http://localhost:3000/requests
 ```
 
 Consultar una solicitud por su `id`:
