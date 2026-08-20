@@ -48,9 +48,15 @@ app.get('/requests/:id', (req, res) => {
 });
 
 app.post('/requests', (req, res) => {
+  const title = req.body.title;
+
+  if (!title || title.trim() === '') {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+
   const newRequest = {
     id: nextId,
-    title: req.body.title,
+    title,
     description: req.body.description,
     status: 'open',
     priority: req.body.priority
@@ -59,7 +65,7 @@ app.post('/requests', (req, res) => {
   nextId = nextId + 1;
   requests.push(newRequest);
 
-  res.status(200).json(newRequest);
+  res.status(201).json(newRequest);
 });
 
 app.listen(PORT, () => {
