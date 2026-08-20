@@ -32,7 +32,7 @@ const requests = [
 
 let nextId = 4;
 
-app.get('/getRequests', (req, res) => {
+app.get('/requests', (req, res) => {
   res.json(requests);
 });
 
