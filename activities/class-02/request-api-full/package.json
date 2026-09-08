@@ -1,0 +1,14 @@
+{
+  "name": "request-api-full",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Express API for maintenance requests with modular structure",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
