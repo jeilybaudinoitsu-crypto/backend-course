@@ -71,6 +71,35 @@ test('a requester cannot change the priority, even of their own request', async 
   assert.equal(response.status, 403);
 });
 
+test('a valid empty collection answers 200 with []', async () => {
+  const owner = await createUser({ name: 'emptyfilter' });
+  const token = await loginAs(owner);
+
+  const response = await request(app)
+    .get('/requests?status=closed')
+    .set('Authorization', `Bearer ${token}`);
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(response.body, []);
+});
+
+test('the owner can read the history of their own request', async () => {
+  const owner = await createUser({ name: 'histowner' });
+  const token = await loginAs(owner);
+  const created = await createRequestAs(token);
+
+  const response = await request(app)
+    .get(`/requests/${created.id}/history`)
+    .set('Authorization', `Bearer ${token}`);
+
+  assert.equal(response.status, 200);
+  assert.ok(Array.isArray(response.body));
+  assert.equal(response.body.length, 1);
+  assert.equal(response.body[0].type, 'status_changed');
+  assert.equal(response.body[0].fromStatus, null);
+  assert.equal(response.body[0].toStatus, 'open');
+});
+
 test('an agent can move a request through a valid transition', async () => {
   const owner = await createUser({ name: 'transowner' });
   const agent = await createUser({ name: 'agent', role: 'agent' });

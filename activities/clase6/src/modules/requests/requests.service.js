@@ -9,13 +9,15 @@ import {
   findById,
   insertRequest,
   updateRequest,
-  insertHistoryEvent
+  insertHistoryEvent,
+  findHistory
 } from './requests.store.js';
-import { mapRequestRow } from './request.mapper.js';
+import { mapRequestRow, mapHistoryEventRow } from './request.mapper.js';
 import { STATUSES, isValidStatus, isTerminal, canTransition } from './request-status.js';
 import {
   canListAllRequests,
   canViewRequest,
+  canViewHistory,
   canCreateRequest,
   canEditContent,
   canChangePriority,
@@ -73,10 +75,9 @@ export async function listRequests(actor, filters) {
     : { ...filters, createdBy: actor.userId };
 
   const rows = await findAll(scope);
-  if (rows.length === 0) {
-    // Nothing matched the given filters.
-    throw new AppError('resource', 'REQUEST_NOT_FOUND', 'No requests matched the given filters.');
-  }
+  // An empty collection is not a missing resource: a valid filter with
+  // no matches answers 200 with [] (BUG-106). 404 is reserved for an
+  // individual resource that does not exist or must not be revealed.
   return rows.map(mapRequestRow);
 }
 
@@ -87,6 +88,21 @@ export async function getRequest(actor, id) {
   const request = mapRequestRow(row);
   if (!canViewRequest(actor, request)) throw notFound(id);
   return request;
+}
+
+export async function getRequestHistory(actor, id) {
+  // Same visibility policy as reading the request itself: an agent can
+  // inspect any history, a requester only their own. A foreign or missing
+  // request answers the SAME 404 (existence is never revealed).
+  const row = await findById(id);
+  if (!row) throw notFound(id);
+
+  const request = mapRequestRow(row);
+  if (!canViewHistory(actor, request)) throw notFound(id);
+
+  // Oldest first, with id as the stable tie-breaker (done in SQL).
+  const rows = await findHistory(id);
+  return rows.map(mapHistoryEventRow);
 }
 
 export async function createRequest(actor, input) {
