@@ -2,9 +2,15 @@ Pega aquí la salida REAL y COMPLETA de:
 
     npm run validate:class-07
 
-Debe incluir las 12 verificaciones con sus secciones (Baseline, Input and
-errors, Traceability, Operation), la línea de Cleanup y el FINAL RESULT.
+> class-07-request-api@7.0.0 class-07:doctor
+> node scripts/check-environment.js
 
-Antes de guardar, revisa que no haya ninguna credencial pegada por error:
-ni DATABASE_URL, ni JWT_SECRET, ni tokens. Si aparece algo así,
-reemplázalo por [configured].
+CLASS 07 ENVIRONMENT CHECK
+
+[01/07] Environment configured ............... PASS
+[02/07] Database connection established ...... PASS
+[03/07] Migrations available ................. PASS
+[04/07] Seed data available .................. PASS
+[05/07] Application can be imported .......... PASS
+[06/07] Test runner available ................ PASS
+[07/07] Incident fixtures available .......... PASS
