@@ -6,13 +6,13 @@ el script no pudiera correr en tu máquina).
 
 ## Metadata
 
-* studentId: [tu identificador — sin datos personales extra]
+* studentId: [Jeilybaudino.itsu@gmail.com]
 * promptVersion: ITSU-CHECKPOINT-01-07-1.0
 * rubricVersion: BACKEND-01-07-R1
-* generatedAt: [fecha ISO]
-* commit: [hash corto del commit evaluado]
+* generatedAt: [29-9-2026]
+* commit: [evaluacion clase 8]
 * tagsEncontrados: [lista de tags]
-* modeloUtilizado: [completa DESPUÉS de ejecutar el prompt]
+* modeloUtilizado: [geminis]
 
 ## Evidencia por clase
 
