@@ -1,5 +1,13 @@
 # Recuperación · Entorno
+[01/07] Environment configured ............... PASS
+[02/07] Database connection established ...... PASS
+[03/07] Migrations available ................. PASS
+[04/07] Seed data available .................. PASS
+[05/07] Application can be imported .......... PASS
+[06/07] Test runner available ................ PASS
+[07/07] Self-evaluation kit available ........ PASS
 
+Environment ready for the architecture workshop.
 ## Supabase inaccesible
 
 **Síntoma:** el doctor falla en "Database connection established"; el terminal muestra `ETIMEDOUT`, `ECONNREFUSED` o `ENOTFOUND`.
