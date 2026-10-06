@@ -9,17 +9,20 @@ import {
   findById,
   insertRequest,
   updateRequest,
-  insertHistoryEvent
+  insertHistoryEvent,
+  findHistory
 } from './requests.store.js';
-import { mapRequestRow } from './request.mapper.js';
+import { mapRequestRow, mapHistoryEventRow } from './request.mapper.js';
 import { STATUSES, isValidStatus, isTerminal, canTransition } from './request-status.js';
 import {
   canListAllRequests,
   canViewRequest,
+  canViewHistory,
   canCreateRequest,
   canEditContent,
   canChangePriority,
-  canChangeStatus
+  canChangeStatus,
+  canClaimRequest
 } from './request.policy.js';
 import { AppError } from '../../app-error.js';
 
@@ -86,6 +89,17 @@ export async function getRequest(actor, id) {
   const request = mapRequestRow(row);
   if (!canViewRequest(actor, request)) throw notFound(id);
   return request;
+}
+
+export async function getRequestHistory(actor, id) {
+  const row = await findById(id);
+  if (!row) throw notFound(id);
+
+  const request = mapRequestRow(row);
+  if (!canViewHistory(actor, request)) throw notFound(id);
+
+  const events = await findHistory(id);
+  return events.map(mapHistoryEventRow);
 }
 
 export async function createRequest(actor, input) {
@@ -206,6 +220,46 @@ export async function patchRequest(actor, id, body) {
         changedBy: actor.userId
       }, client);
     }
+    return updated;
+  });
+
+  return mapRequestRow(row);
+}
+
+export async function claimRequest(actor, id, body) {
+  rejectServerControlledFields(body, ['assignedTo']);
+  if (body && Object.prototype.hasOwnProperty.call(body, 'assignedTo')) {
+    throw new AppError('contract', 'SERVER_CONTROLLED_FIELD',
+      'The field "assignedTo" is controlled by the server.');
+  }
+
+  const row = await withTransaction(async (client) => {
+    const current = await findById(id, client);
+    if (!current) throw notFound(id);
+
+    const request = mapRequestRow(current);
+    const decision = canClaimRequest({ actor, request });
+    if (!decision.allowed) {
+      if (decision.reason === 'NOT_AGENT') {
+        throw forbidden('Only agents can claim requests.');
+      }
+      if (decision.reason === 'ALREADY_ASSIGNED') {
+        throw new AppError('domain', 'REQUEST_ALREADY_ASSIGNED', 'The request is already assigned.');
+      }
+      if (decision.reason === 'NOT_OPEN') {
+        throw new AppError('domain', 'REQUEST_ALREADY_ASSIGNED', 'The request cannot be claimed.');
+      }
+      throw new AppError('forbidden', 'FORBIDDEN', 'Not allowed to claim this request.');
+    }
+
+    const updated = await updateRequest(id, { assigned_to: actor.userId, status: 'in_progress' }, client);
+    await insertHistoryEvent({
+      requestId: id,
+      type: 'request_claimed',
+      fromStatus: current.status,
+      toStatus: 'in_progress',
+      changedBy: actor.userId
+    }, client);
     return updated;
   });
 

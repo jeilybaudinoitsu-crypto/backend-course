@@ -12,6 +12,7 @@ const REQUEST_COLUMNS = `
   priority,
   status,
   created_by,
+  assigned_to,
   created_at,
   updated_at
 `;
@@ -71,7 +72,7 @@ export async function updateRequest(id, changes, db = pool) {
   const assignments = [];
   const values = [];
 
-  for (const field of ['title', 'description', 'priority', 'status']) {
+  for (const field of ['title', 'description', 'priority', 'status', 'assigned_to']) {
     if (changes[field] !== undefined) {
       values.push(changes[field]);
       assignments.push(`${field} = $${values.length}`);

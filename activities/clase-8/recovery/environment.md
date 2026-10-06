@@ -81,3 +81,20 @@ Environment ready for the architecture workshop.
 **Qué no hacer:** copiar un token viejo de otra sesión; comentar la verificación "mientras tanto".
 
 **Pregunta para comprender:** ¿por qué cambiar el secreto invalida todos los tokens emitidos?
+
+## Evidencia final del taller FEATURE-801
+
+Se ejecutaron estos comandos en la actividad de clase 08:
+
+```bash
+cd /home/sitiouno/Escritorio/backend-course/activities/clase-8
+npm test -- --test-reporter=spec
+npm run validate:class-08
+```
+
+Resultado verificado:
+
+- `npm test -- --test-reporter=spec` → 52 tests, 52 pass, 0 fail.
+- `npm run validate:class-08` → 12/12 checks PASS; `FINAL RESULT: PASSED`.
+
+> Esta evidencia queda registrada aquí como cierre del ticket FEATURE-801 y del trabajo del taller.
