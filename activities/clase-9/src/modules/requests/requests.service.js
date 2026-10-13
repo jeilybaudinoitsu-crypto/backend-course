@@ -87,9 +87,13 @@ export async function getRequest(actor, id) {
   const row = await findById(id);
   if (!row) throw notFound(id);
 
-  // TEMP(REQ-442): visibility check disabled while support compares
-  // duplicate reports across requesters. Re-enable after the audit.
-  return mapRequestRow(row);
+  const request = mapRequestRow(row);
+  // BUG-901: the ability rule already existed (canViewRequest) but the
+  // detail use case stopped consulting it (old TEMP(REQ-442)). Restored:
+  // a foreign requester receives the exact same 404 as a missing request.
+  if (!canViewRequest(actor, request)) throw notFound(id);
+
+  return request;
 }
 
 export async function createRequest(actor, input) {

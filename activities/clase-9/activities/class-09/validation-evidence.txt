@@ -1,3 +1,17 @@
+# Validation evidence — Clase 09 (Taller BUG-901)
+
+Total de comandos ejecutados y sus salidas reales durante el taller.
+Sin secretos: la DATABASE_URL y el JWT_SECRET viven solo en .env y nunca
+se copian aquí; los tokens Bearer de prueba se muestran como <redactado>.
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ git remote -v
+origin  https://github.com/jeilybaudinoitsu-crypto/backend-course.git (fetch)
+origin  https://github.com/jeilybaudinoitsu-crypto/backend-course.git (push)
+
+--------------------------------------------------------------------------
+[1] BASELINE — doctor (7/7)
+--------------------------------------------------------------------------
+
 sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm run doctor
 
 > class-09-request-api@8.0.0 doctor
@@ -14,4 +28,196 @@ CLASS 09 ENVIRONMENT CHECK
 [07/07] Assessment kit available ............. PASS
 
 Environment ready: assessment first, then the legacy-system workshop.
-sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ 
+
+--------------------------------------------------------------------------
+[2] BASELINE — migraciones (todas SKIPPED: ya aplicadas)
+--------------------------------------------------------------------------
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm run db:migrate
+
+> class-09-request-api@8.0.0 db:migrate
+> node scripts/migrate.js
+
+DATABASE MIGRATIONS
+
+[SKIPPED] 001_create_users.sql
+[SKIPPED] 002_create_requests.sql
+[SKIPPED] 003_create_request_history.sql
+[SKIPPED] 004_add_constraints_and_indexes.sql
+[SKIPPED] 005_add_request_assignment.sql
+
+No pending migrations.
+
+--------------------------------------------------------------------------
+[3] BASELINE — seed (repetible)
+--------------------------------------------------------------------------
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm run db:seed
+
+> class-09-request-api@8.0.0 db:seed
+> node scripts/seed.js
+
+DATABASE SEED
+
+Users
+- 2 requesters ready
+- 1 agent ready
+
+Requests
+- 6 requests ready
+- 15 history events ready
+- 1 request already assigned to the seed agent (claimed)
+
+Seed completed successfully.
+
+--------------------------------------------------------------------------
+[4] BASELINE — suite completa (verde; los 5 TODO eran los stubs de BUG-901)
+--------------------------------------------------------------------------
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm test
+... [salida truncada: 64 tests] ...
+
+ℹ tests 64
+ℹ pass 59
+ℹ fail 0
+ℹ todo 5   <-- stubs: el hueco del BUG-901 no estaba cubierto por ninguna prueba
+
+--------------------------------------------------------------------------
+[5] REPRODUCCIÓN DE BUG-901 (ANTES del fix) — requester ajeno lee lo ajeno
+--------------------------------------------------------------------------
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm start &
+# login para ana (owner), luis (requester ajeno) y lectura del ID 32 de Ana
+
+== Ana lista sus solicitudes ==
+32 | createdBy= 8959ca2b-1966-4943-a9e3-1565527476e0 | Mi laptop no enciende
+33 | createdBy= 8959ca2b-1966-4943-a9e3-1565527476e0 | No puedo entrar a la VPN
+34 | createdBy= 8959ca2b-1966-4943-a9e3-1565527476e0 | El proyector de la sala 2 parpadea
+
+== Luis (requester ajeno) intenta leer la solicitud de Ana con ese ID ==
+GET /requests/32  Authorization: Bearer <redactado-token-de-luis>
+{"id":32,"title":"Mi laptop no enciende","description":"Solicitud de demostración
+del taller (seed).","priority":"high","status":"open","assignedTo":null,
+"createdBy":"8959ca2b-1966-4943-a9e3-1565527476e0", ...}
+HTTP 200            <-- LEAK: debía ser 404. BUG confirmado con mis ojos.
+
+--------------------------------------------------------------------------
+[6] REGRESIÓN activada ANTES del fix — debe estar en ROJO
+--------------------------------------------------------------------------
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm run test:detail
+
+✖ a different requester receives the same 404 as a missing request
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  200 !== 404
+✖ a userId in the query string does not grant access
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  200 !== 404
+
+# Las pruebas de regresión convierten el bug en un desplome verificable:
+# reproducen el acceso indebido antes de tocar una sola línea de código.
+
+--------------------------------------------------------------------------
+[7] LA REGLA YA EXISTÍA — quien la consultaba era el problema
+--------------------------------------------------------------------------
+
+# canViewRequest (src/modules/requests/request.policy.js:20-23) definía:
+#   agente -> true ; requester -> solo si createdBy === actor.userId
+# getRequest (src/modules/requests/requests.service.js) la había dejado de
+# consultar bajo el comentario TEMP(REQ-442). getHistory SÍ la consulta
+# (mismo service, línea ~224).
+
+--------------------------------------------------------------------------
+[8] CORRECCIÓN MÍNIMA (sin capas nuevas, sin migraciones, sin cambios de schema)
+--------------------------------------------------------------------------
+
+# src/modules/requests/requests.service.js — getRequest(actor, id):
+#   const request = mapRequestRow(row);
+#   if (!canViewRequest(actor, request)) throw notFound(id);
+#   return request;
+# Reutiliza canViewRequest y el mismo 404 de "no existe" (decisión BUG-901).
+
+--------------------------------------------------------------------------
+[9] REGRESIÓN + POLICY TRAS EL FIX — en VERDE
+--------------------------------------------------------------------------
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm run test:detail
+✔ without a token the detail returns 401
+✔ a well-formed id that does not exist returns 404
+✔ the owner reads their request and the schema is preserved
+✔ an agent can read any request
+✔ a different requester receives the same 404 as a missing request
+✔ a userId in the query string does not grant access
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm run test:policy
+✔ an agent can view any request
+✔ the owner requester can view their own request
+✔ a different requester cannot view the request
+✔ an agent can claim an open, unassigned request
+✔ a requester cannot claim, even an open request
+✔ an already assigned request cannot be claimed again
+✔ a request that is not open cannot be claimed
+✔ the role rule wins over the state rules
+
+# Policy comprobable SIN Express y SIN base (milisegundos).
+
+--------------------------------------------------------------------------
+[10] VERIFICACIÓN HTTP REAL (contra el seed, tras el fix)
+--------------------------------------------------------------------------
+
+== Luis (ajeno) lee request de Ana: esperado 404 ==   HTTP 404
+== Luis (ajeno) con ?userId de Ana: esperado 404 ==   HTTP 404
+== Ana (owner): esperado 200 ==                       HTTP 200
+== Maria (agent): esperado 200 ==                     HTTP 200
+== Sin token: esperado 401 ==                         HTTP 401
+
+# userId en query NO concede acceso: la única identidad confiable es el
+# token verificado (req.auth). Esquema de respuesta autorizada intacto.
+
+--------------------------------------------------------------------------
+[11] SUITE COMPLETA TRAS EL FIX — 64/64 en verde, 0 TODO
+--------------------------------------------------------------------------
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm test
+
+ℹ tests 64
+ℹ pass 64
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+
+--------------------------------------------------------------------------
+[12] VALIDADOR FINAL — 14/14 PASSED
+--------------------------------------------------------------------------
+
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm run validate:class-09
+
+CLASS 09 SYSTEM VALIDATION
+
+Environment
+[01/14] Required environment variables ........... PASS
+[02/14] Database connection ...................... PASS
+
+System dossier
+[03/14] Required sections exist .................. PASS
+[04/14] Request trace references real files ...... PASS
+[05/14] Audit uses allowed classifications ....... PASS
+[06/14] Change impact completed .................. PASS
+
+Authorization
+[07/14] Unauthenticated request returns 401 ...... PASS
+[08/14] Owner requester receives 200 ............. PASS
+[09/14] Other requester receives 404 ............. PASS
+[10/14] Agent receives 200 ....................... PASS
+[11/14] Body/query userId cannot grant access .... PASS
+
+Boundaries and regression
+[12/14] Policy has no Express dependency ......... PASS
+[13/14] Regression suite passes .................. PASS
+[14/14] No secrets included in submissions ....... PASS
+
+Cleanup
+Temporary validation data removed successfully.
+
+FINAL RESULT: PASSED
