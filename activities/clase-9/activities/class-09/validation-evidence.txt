@@ -1,1 +1,17 @@
-[PEGAR AQUÍ la salida real y completa de npm run validate:class-09 terminando en FINAL RESULT: PASSED]
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ npm run doctor
+
+> class-09-request-api@8.0.0 doctor
+> node scripts/check-environment.js
+
+CLASS 09 ENVIRONMENT CHECK
+
+[01/07] Environment configured ............... PASS
+[02/07] Database connection established ...... PASS
+[03/07] Migrations available ................. PASS
+[04/07] Seed data available .................. PASS
+[05/07] Application can be imported .......... PASS
+[06/07] Test runner available ................ PASS
+[07/07] Assessment kit available ............. PASS
+
+Environment ready: assessment first, then the legacy-system workshop.
+sitiouno@WKS4101YM6:~/Escritorio/backend-course/activities/clase-9$ 
