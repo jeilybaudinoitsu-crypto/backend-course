@@ -1,0 +1,106 @@
+{
+"protocolVersion": "ITSU-KNOWLEDGE-09-1.0",
+"rubricVersion": "BACKEND-01-08-K1",
+"evaluationId": "K09-jeilybaudino-itsu-42bdedb",
+"studentId": "jeilybaudino-itsu",
+"commit": "42bdedb",
+"variant": "D",
+"status": "COMPLETE",
+"action": "SUPPORT",
+"questions": [
+{
+"questionId": "Q1",
+"topics": ["HTTP", "request flow", "route handlers"],
+"levels": { "conceptual": 3, "grounding": 3, "reasoning": 3, "verification": 2 },
+"evidence": ["por lo que veo las peticiones pasan a express. no se de que es gethistory pero segun entiendo, gethistory pide informacin a una historia sin modificar nada."],
+"strength": "Identifica la capa de enrutamiento en Express y la separación de operaciones de solo lectura.",
+"gap": "Requiere mayor soltura al mapear la ruta exacta con los servicios subyacentes.",
+"rectification": "Comprender la trazabilidad completa desde el endpoint hasta el servicio y almacenamiento.",
+"confidence": "medium"
+},
+{
+"questionId": "Q2",
+"topics": ["database transactions", "invariants", "consistency"],
+"levels": { "conceptual": 3, "grounding": 3, "reasoning": 3, "verification": 2 },
+"evidence": ["el sistema denbe de guardar siempre el istorial de solicitudes no se deben de borrar", "supongo que si ya que estas pidiendole a la base de datos que te de el historial, actualizandolo y registrando"],
+"strength": "Reconoce la necesidad de atomicidad y transacciones al actualizar y registrar historiales simultáneamente.",
+"gap": "Confusión inicial leve entre consultas de lectura y operaciones transaccionales compuestas.",
+"rectification": "Afianzar el concepto de transacciones ACID para evitar estados inconsistentes en la base de datos.",
+"confidence": "medium"
+},
+{
+"questionId": "Q3",
+"topics": ["authentication", "authorization", "request.policy.js"],
+"levels": { "conceptual": 3, "grounding": 3, "reasoning": 3, "verification": 2 },
+"evidence": ["un usuaro no pude pedir infomacion de otro pior lo que da error 404 o 409", "dentro del archvo hay dos roles, el mas confiable es el: return actor.role === 'agent'"],
+"strength": "Ubica correctamente el archivo de políticas de autorización y comprende el aislamiento de roles.",
+"gap": "Distinción superficial entre el flujo de autenticación por middleware y las reglas puras de política.",
+"rectification": "Consolidar el uso de políticas desacopladas de infraestructura para la validación de permisos.",
+"confidence": "medium"
+},
+{
+"questionId": "Q4",
+"topics": ["JWT", "claims", "digital signatures"],
+"levels": { "conceptual": 3, "grounding": 3, "reasoning": 3, "verification": 2 },
+"evidence": ["no se que es el claims, porras decirme que es?", "si ya lo comprendo"],
+"strength": "Receptiva a la asimilación conceptual de los claims y la validación de la firma en tokens JWT.",
+"gap": "Desconocimiento inicial del término técnico 'claims' dentro de los tokens de sesión.",
+"rectification": "Diferenciar entre decodificación en Base64 y verificación criptográfica de la firma del token.",
+"confidence": "medium"
+},
+{
+"questionId": "Q5",
+"topics": ["security best practices", "payload manipulation prevention"],
+"levels": { "conceptual": 3, "grounding": 3, "reasoning": 3, "verification": 2 },
+"evidence": ["supongo que si vivieran el body serian mal fasiles de atacar"],
+"strength": "Comprende los vectores de ataque asociados a confiar ciegamente en datos provistos en el body o query.",
+"gap": "Fundamentación técnica un poco informal sobre el origen confiable de la identidad.",
+"rectification": "Internalizar que la identidad del actor debe extraerse exclusivamente del token autenticado en el servidor.",
+"confidence": "medium"
+}
+],
+"priorityGaps": [
+"Profundización en el ciclo de vida de los datos transaccionales.",
+"Distinción rigurosa entre claims de un JWT y parámetros modificables por el cliente."
+],
+"strengths": [
+"Capacidad para explorar el código del repositorio y localizar archivos clave de rutas y políticas.",
+"Buena intuición sobre la necesidad de consistencia en el almacenamiento de datos."
+],
+"recommendedStudyActions": [
+"Revisar la implementación de transacciones en PostgreSQL y Node.js para operaciones compuestas.",
+"Estudiar la estructura interna de los JSON Web Tokens (JWT) y la verificación de firmas digitales.",
+"Analizar el flujo completo de middleware de autenticación y su integración con políticas de autorización."
+],
+"reviewSignals": ["NONE"],
+"teacherReview": {
+"priority": "medium",
+"oralVerificationRecommended": false,
+"questions": [
+{
+"question": "¿Por qué es un riesgo de seguridad extraer el userId o el rol directamente del req.body en lugar del token verificado?",
+"expectedAnswer": "Porque el cliente puede alterar o falsificar cualquier dato enviado en el cuerpo de la petición (body) o parámetros, permitiendo suplantación de identidad o escalación de privilegios."
+},
+{
+"question": "¿Qué garantiza una transacción de base de datos al actualizar una solicitud y registrar su historial simultáneamente?",
+"expectedAnswer": "Garantiza la atomicidad (propiedad ACID): o ambas operaciones se ejecutan con éxito, o ambas se revierten (rollback), evitando registros huérfanos o estados inconsistentes."
+},
+{
+"question": "¿Cuál es la diferencia principal entre la decodificación de un JWT y la verificación de su firma?",
+"expectedAnswer": "La decodificación solo lee el contenido codificado en Base64 sin validar su autenticidad, mientras que la verificación de la firma comprueba criptográficamente que el token fue emitido por el servidor legítimo y no ha sido alterado."
+}
+],
+"minimumExpectedAnswers": [
+"El cliente puede modificar el body.",
+"Atomicidad para evitar inconsistencias.",
+"La firma criptográfica valida la autenticidad."
+],
+"reason": "Estudiante muestra buen criterio general y navegación del repositorio, beneficiándose de refuerzo en conceptos criptográficos de JWT y consistencia transaccional.",
+"digest": "Evaluación completa de backend con buen desempeño en navegación de código, requiriendo afianzar JWT y transacciones."
+},
+"progressSinceLast": {
+"previousProtocol": "ITSU-PROGRESS|V=1.0|R=BACKEND-01-07-R1",
+"previousStatus": "INSUFFICIENT_EVIDENCE",
+"improvementObserved": "Superación de la falta de evidencia previa mediante participación activa, exploración de código y consolidación de conceptos de arquitectura REST y políticas."
+}
+}
